@@ -17,6 +17,10 @@
 
 using namespace std;
 
+int xWrap(const int x);
+int yWrap(const int y);
+int countNeighbors(int board[][ROWS], int currentX, int currentY);
+
 // isRand=0 for dead state
 void initBoard(int board[][ROWS], bool isRand)
 {
@@ -70,9 +74,6 @@ int countNeighbors(int board[][ROWS], int currentX, int currentY)
         col-1, row+1 | row+1 | col+1, row+1
     */
     int count = 0;
-
-    // iterate through the 9 squares around the cell. assure we do not double count.
-
     // check row above.
     if (board[currentX][yWrap(currentY-1)])
         count++;
@@ -86,26 +87,35 @@ int countNeighbors(int board[][ROWS], int currentX, int currentY)
     if (board[xWrap(currentX+1)][currentY])
         count++;
     // check row below
-    // assure that we do not double count
-    if (current)
-
-    return 0;
+    if (board[currentX][yWrap(currentY+1)])
+        count++;
+    if (board[xWrap(currentX-1)][yWrap(currentY+1)])
+        count++;
+    if (board[xWrap(currentX+1)][yWrap(currentY+1)])
+        count++;
+    return count;
 }
 
 // returns the wrapped value of x
 int xWrap(const int x)
 {
-    if (x == COLS - 1)
+    if (x >= COLS)
         return 0;
+    if (x == -1)
+        return COLS -1;
     return x;
 }
 
 // returns the wrapped value of y
 int yWrap(const int y)
 {
-    if (y == ROWS - 1)
+    if (y >= ROWS)
     {
         return 0;
+    }
+    if (y == -1)
+    {
+        return ROWS-1;
     }
     return y;
 }
