@@ -8,18 +8,18 @@
 #define CLS system("cls")
 #else
 #include <unistd.h>
-#define SLEEP usleep(3000)
+#define SLEEP usleep(450000)
 #define CLS printf("\033[H\033[J")
 #endif
 
-#define ROWS 3
-#define COLS 3
+#define ROWS 26
+#define COLS 26
 
 using namespace std;
 
-int xWrap(const int x);
-int yWrap(const int y);
-int countNeighbors(int board[][ROWS], int currentX, int currentY);
+int rowWrap(const int x);
+int colWrap(const int y);
+int countNeighbors(int board[][ROWS], int row, int col);
 
 // isRand=0 for dead state
 void initBoard(int board[][ROWS], bool isRand)
@@ -50,23 +50,32 @@ void nextBoardState(int board[][ROWS])
     {
         for (int j = 0; j < COLS; j++)
         {
-            int neighbors = countNeighbors(board, j, i);
+            int neighbors = countNeighbors(board, i, j);
             // 0-1 becomes dead due to underpop
-            if (neighbors == 0 && board[i][j] == 1)
-                nextBoard[i][j] = 1;
+            if (neighbors <= 1 && board[i][j] == 1)
+                nextBoard[i][j] = 0;
             // 2-3 stays alive, e.g. stays the same
             // 3+ dies of overpop
-            if (neighbors > 3)
+            else if (neighbors > 3)
                 nextBoard[i][j] = 0;
             // any dead cell with exactly 3 neighbors becomes alive.
-            if (neighbors == 3 && board[i][j] == 1)
+            else if (neighbors == 3 && board[i][j] == 0)
                 nextBoard[i][j] = 1;
+            else
+                nextBoard[i][j] = board[i][j];
+        }
+    }
+    for (int i = 0; i < ROWS; i++)
+    {
+        for (int j = 0; j < COLS; j++)
+        {
+            board[i][j] = nextBoard[i][j];
         }
     }
 }
 
 // will wrap around
-int countNeighbors(int board[][ROWS], int currentX, int currentY)
+int countNeighbors(int board[][ROWS], int row, int col)
 {
     /*
         col-1, row-1 | row-1 | col+1, row-1
@@ -75,48 +84,44 @@ int countNeighbors(int board[][ROWS], int currentX, int currentY)
     */
     int count = 0;
     // check row above.
-    if (board[currentX][yWrap(currentY-1)])
+    if (board[rowWrap(row-1)][colWrap(col)])
         count++;
-    if (board[xWrap(currentX-1)][yWrap(currentY-1)])
+    if (board[rowWrap(row-1)][colWrap(col-1)])
         count++;
-    if (board[xWrap(currentX+1)][yWrap(currentY-1)])
+    if (board[rowWrap(row-1)][colWrap(col+1)])
         count++;
     // check immediate col
-    if (board[xWrap(currentX-1)][currentY])
+    if (board[rowWrap(row)][colWrap(col-1)])
         count++;
-    if (board[xWrap(currentX+1)][currentY])
+    if (board[rowWrap(row)][colWrap(col+1)])
         count++;
     // check row below
-    if (board[currentX][yWrap(currentY+1)])
+    if (board[rowWrap(row+1)][colWrap(col)])
         count++;
-    if (board[xWrap(currentX-1)][yWrap(currentY+1)])
+    if (board[rowWrap(row+1)][colWrap(col-1)])
         count++;
-    if (board[xWrap(currentX+1)][yWrap(currentY+1)])
+    if (board[rowWrap(row+1)][colWrap(col+1)])
         count++;
     return count;
 }
 
 // returns the wrapped value of x
-int xWrap(const int x)
+int rowWrap(const int x)
 {
-    if (x >= COLS)
+    if (x >= ROWS)
         return 0;
-    if (x == -1)
-        return COLS -1;
+    else if (x == -1)
+        return ROWS -1;
     return x;
 }
 
 // returns the wrapped value of y
-int yWrap(const int y)
+int colWrap(const int y)
 {
-    if (y >= ROWS)
-    {
+    if (y >= COLS)
         return 0;
-    }
-    if (y == -1)
-    {
-        return ROWS-1;
-    }
+    else if (y == -1)
+        return COLS-1;
     return y;
 }
 
@@ -148,4 +153,23 @@ void printBoard(int board[][ROWS])
         cout << "-";
     }
     cout << "\n\n";
+}
+
+void runLife(int board[][ROWS])
+{
+
+    while(1)
+    {
+        nextBoardState(board);
+        printBoard(board);
+        SLEEP;
+    }
+}
+
+int main()
+{
+    int board[COLS][ROWS];
+    initBoard(board, true);
+    printBoard(board);
+    runLife(board);
 }
